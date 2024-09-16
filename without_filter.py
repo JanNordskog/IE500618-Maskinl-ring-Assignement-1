@@ -14,11 +14,7 @@ upper_limit = data['Lot Area'].quantile(0.80)  #removes houses with lot higher t
 pool_area = data['Pool Area'] < 1   #removes houses with pools
 bldg_type = data['Bldg Type'] == '1Fam' #filters only 1Fam houses
 full_bath = data['Full Bath'] < 3   #filter houses with only less than 3 full baths
-filtered_data = data[(data['Lot Area'] >= lower_limit) & 
-                     (data['Lot Area'] <= upper_limit) & 
-                     pool_area & 
-                     bldg_type & 
-                     full_bath] 
+filtered_data = data
 
 
 # Group by 'Yr Sold' and calculate the average SalePrice for each year
