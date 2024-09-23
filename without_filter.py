@@ -1,55 +1,49 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 # Load the CSV file
-file_path = 'AmesHousing.csv'  # Replace this with the actual path to your CSV file
+file_path = 'AmesHousing.csv'  
 data = pd.read_csv(file_path)
 
 # Apply filters:
-# 1. Filter Lot Area between 20th and 80th percentile
+# Filter Lot Area between 20th and 80th percentile
 lower_limit = data['Lot Area'].quantile(0.20)
 upper_limit = data['Lot Area'].quantile(0.80)
 pool_area = data['Pool Area'] < 1
 bldg_type = data['Bldg Type'] == '1Fam'
 full_bath = data['Full Bath'] < 3  
+
 filtered_data = data[(data['Lot Area'] >= lower_limit) & 
                      (data['Lot Area'] <= upper_limit) & 
                      pool_area & 
                      bldg_type & 
-                     full_bath] 
+                     full_bath]
 
-# Create the scatter plot
-plt.figure(figsize=(10, 6))
-plt.scatter(filtered_data['Yr Sold'], filtered_data['SalePrice'], alpha=0.5)
+# Select features (e.g., 'Yr Sold', 'Lot Area', 'Gr Liv Area') and target variable ('SalePrice')
+X = filtered_data[['Yr Sold', 'Lot Area', 'Gr Liv Area']]  # Features (you can add more if needed)
+y = filtered_data['SalePrice']  # Target variable
 
-# Polynomial regression: degree 2 (quadratic)
-x = filtered_data['Yr Sold'].values.reshape(-1, 1)  # Reshape for sklearn
-y = filtered_data['SalePrice'].values
+# Split the data into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Apply PolynomialFeatures
-poly = PolynomialFeatures(degree=2)  # For quadratic regression
-x_poly = poly.fit_transform(x)
-
-# Fit the linear regression model
+# Train the Linear Regression model
 model = LinearRegression()
-model.fit(x_poly, y)
+model.fit(X_train, y_train)
 
-# Predict using the polynomial model
-y_poly_pred = model.predict(x_poly)
+# Make predictions
+y_train_pred = model.predict(X_train)
+y_test_pred = model.predict(X_test)
 
-# Plot the polynomial regression line
-sorted_idx = np.argsort(x.flatten())  # Sort the indices to plot the line smoothly
-plt.plot(x[sorted_idx], y_poly_pred[sorted_idx], color='red', label='Polynomial Regression Line (Degree 2)')
+# Evaluate the model on the training and testing sets
+mse_train = mean_squared_error(y_train, y_train_pred)
+mse_test = mean_squared_error(y_test, y_test_pred)
+mae_test = mean_absolute_error(y_test, y_test_pred)
+r2_test = r2_score(y_test, y_test_pred)
 
-# Customize the plot
-plt.title('Scatter Plot of SalePrice vs Year Sold (With Polynomial Regression)')
-plt.xlabel('Year Sold')
-plt.ylabel('Sale Price')
-plt.grid(True)
-plt.legend()
-
-# Show the plot
-plt.show()
+# Display results
+print(f"Training MSE: {mse_train:.2f}")
+print(f"Test MSE: {mse_test:.2f}")
+print(f"Test MAE: {mae_test:.2f}")
+print(f"Test R² Score: {r2_test:.2f}")
